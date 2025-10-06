@@ -1,25 +1,52 @@
 {% extends 'game/base.html' %}
 {% block content %}
-<h2>Game #{{ game.id }}</h2>
+<h2>🎮 Game #{{ game.id }}</h2>
 
+<style>
+  .letter-box {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    margin: 3px;
+    font-weight: bold;
+    font-size: 20px;
+    color: white;
+    border-radius: 6px;
+  }
+  .green { background-color: green; }
+  .orange { background-color: orange; }
+  .grey { background-color: grey; }
+</style>
+
+<!-- Show previous guesses -->
 {% for guess in guesses %}
   <div>
-    {% with colors=guess.result.split(',') letters=guess.guess_word|make_list %}
-      {% for c,l in colors|zip:letters %}
-        <span class="{{ c }}">{{ l }}</span>
-      {% endfor %}
-    {% endwith %}
+    {% for i in guess.result_list %}
+      <span class="letter-box {{ i }}">
+        {{ guess.guess_word|slice:forloop.counter0|stringformat:"s" }}
+      </span>
+    {% endfor %}
   </div>
+{% empty %}
+  <p>No guesses yet. Start guessing!</p>
 {% endfor %}
 
+<!-- Guess input form -->
 {% if not game.completed %}
-<form method="post">{% csrf_token %}
-  <p><input name="guess" maxlength="5" required placeholder="Enter 5-letter word">
-  <button type="submit">Submit</button></p>
-</form>
+  <form method="post" style="margin-top:15px;">
+    {% csrf_token %}
+    <input name="guess" maxlength="5" required placeholder="Enter 5-letter word" style="text-transform:uppercase;">
+    <button type="submit">Submit</button>
+  </form>
 {% endif %}
 
+<!-- Win/Lose message -->
 {% if message %}
-<script>alert("{{ message }}");window.location="{% url 'home' %}";</script>
+  <script>
+    alert("{{ message }}");
+    window.location = "{% url 'home' %}";
+  </script>
 {% endif %}
 {% endblock %}

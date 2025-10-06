@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User     # ✅ Add this line
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Count, Q
@@ -75,62 +75,101 @@ def evaluate_guess(secret, guess):
     result = ['grey'] * 5
     unmatched = []
 
+    # First pass: correct positions
     for i in range(5):
         if guess[i] == secret[i]:
             result[i] = 'green'
         else:
             unmatched.append(secret[i])
 
+    # Second pass: correct letters wrong position
     for i in range(5):
         if result[i] == 'grey' and guess[i] in unmatched:
             result[i] = 'orange'
             unmatched.remove(guess[i])
+
     return result
 
 
+# Main game view
 @login_required
 def play_game(request, game_id):
     game = get_object_or_404(Game, id=game_id, user=request.user)
+
+    # If game already completed
     if game.completed:
-        messages.info(request, 'This game is completed.')
+        messages.info(request, 'This game is already completed.')
         return redirect('home')
 
+    # Handle guesses
     if request.method == 'POST':
         guess_word = request.POST.get('guess', '').upper()
+
+        # Validate guess
         if len(guess_word) != 5 or not guess_word.isalpha():
-            messages.error(request, 'Guess must be 5 uppercase letters.')
+            messages.error(request, 'Guess must be exactly 5 uppercase letters.')
             return redirect('play_game', game.id)
 
+        # Check guess limit
         if game.attempts_used >= 5:
             game.completed = True
             game.save()
-            messages.error(request, 'Max 5 guesses reached.')
+            messages.error(request, 'Maximum 5 guesses reached.')
             return redirect('home')
 
+        # Evaluate result
         result = evaluate_guess(game.word.word, guess_word)
-        Guess.objects.create(game=game, guess_word=guess_word,
-                             attempt_number=game.attempts_used + 1,
-                             result=','.join(result))
+
+        # Save the guess
+        Guess.objects.create(
+            game=game,
+            guess_word=guess_word,
+            attempt_number=game.attempts_used + 1,
+            result=','.join(result)
+        )
+
+        # Increase attempt count
         game.attempts_used += 1
 
+        # Check if correct
         if guess_word == game.word.word:
-            game.won, game.completed = True, True
+            game.won = True
+            game.completed = True
             game.save()
-            return render(request, 'game/game.html',
-                          {'game': game, 'message': 'Congratulations! You guessed the word!'})
+            guesses = game.guesses.all()
+            for g in guesses:
+                g.result_list = g.result.split(',') if g.result else []
+            return render(request, 'game/game.html', {
+                'game': game,
+                'guesses': guesses,
+                'message': f'🎉 Congratulations! The word was {game.word.word}.'
+            })
 
+        # If 5 attempts done but not guessed
         if game.attempts_used == 5:
             game.completed = True
             game.save()
-            return render(request, 'game/game.html',
-                          {'game': game, 'message': 'Better luck next time!'})
+            guesses = game.guesses.all()
+            for g in guesses:
+                g.result_list = g.result.split(',') if g.result else []
+            return render(request, 'game/game.html', {
+                'game': game,
+                'guesses': guesses,
+                'message': f'❌ Better luck next time! The word was {game.word.word}.'
+            })
 
         game.save()
         return redirect('play_game', game.id)
 
+    # GET request → just show game
     guesses = game.guesses.all()
-    return render(request, 'game/game.html', {'game': game, 'guesses': guesses})
+    for g in guesses:
+        g.result_list = g.result.split(',') if g.result else []
 
+    return render(request, 'game/game.html', {
+        'game': game,
+        'guesses': guesses
+    })
 
 @user_passes_test(lambda u: u.is_staff)
 def admin_daily_report(request):
