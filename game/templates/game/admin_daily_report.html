@@ -1,0 +1,10 @@
+{% extends 'game/base.html' %}
+{% block content %}
+<h2>Daily Report</h2>
+<form method="get">
+  <input type="date" name="date" value="{{ qdate }}">
+  <button type="submit">Show</button>
+</form>
+<p>Users Played: {{ users_played }}</p>
+<p>Correct Guesses: {{ correct_guesses }}</p>
+{% endblock %}

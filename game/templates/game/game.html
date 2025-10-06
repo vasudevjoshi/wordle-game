@@ -1,0 +1,25 @@
+{% extends 'game/base.html' %}
+{% block content %}
+<h2>Game #{{ game.id }}</h2>
+
+{% for guess in guesses %}
+  <div>
+    {% with colors=guess.result.split(',') letters=guess.guess_word|make_list %}
+      {% for c,l in colors|zip:letters %}
+        <span class="{{ c }}">{{ l }}</span>
+      {% endfor %}
+    {% endwith %}
+  </div>
+{% endfor %}
+
+{% if not game.completed %}
+<form method="post">{% csrf_token %}
+  <p><input name="guess" maxlength="5" required placeholder="Enter 5-letter word">
+  <button type="submit">Submit</button></p>
+</form>
+{% endif %}
+
+{% if message %}
+<script>alert("{{ message }}");window.location="{% url 'home' %}";</script>
+{% endif %}
+{% endblock %}

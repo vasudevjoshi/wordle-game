@@ -1,0 +1,9 @@
+{% extends 'game/base.html' %}
+{% block content %}
+<h2>Login</h2>
+<form method="post">{% csrf_token %}
+  <p>Username: <input name="username"></p>
+  <p>Password: <input name="password" type="password"></p>
+  <button type="submit">Login</button>
+</form>
+{% endblock %}

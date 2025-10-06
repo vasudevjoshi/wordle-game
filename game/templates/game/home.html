@@ -1,0 +1,14 @@
+{% extends 'game/base.html' %}
+{% block content %}
+<h2>Your Games Today</h2>
+<ul>
+  {% for g in games_today %}
+    <li>
+      Game {{ g.id }} - {% if g.won %}✅ Won{% elif g.completed %}❌ Lost{% else %}In progress{% endif %}
+      <a href="{% url 'play_game' g.id %}">Open</a>
+    </li>
+  {% empty %}
+    <li>No games today yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'game/base.html' %}
+{% block content %}
+<h2>User Report</h2>
+<form method="get">
+  Username: <input name="username" value="{{ username }}">
+  <button type="submit">Show</button>
+</form>
+{% if report %}
+<table border="1">
+<tr><th>Date</th><th>Words Tried</th><th>Correct</th></tr>
+{% for r in report %}
+<tr><td>{{ r.date }}</td><td>{{ r.words_tried }}</td><td>{{ r.correct }}</td></tr>
+{% endfor %}
+</table>
+{% endif %}
+{% endblock %}

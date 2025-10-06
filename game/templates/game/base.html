@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .green { background:#6aaa64; color:white; padding:5px; }
+    .orange { background:#c9b458; color:white; padding:5px; }
+    .grey { background:#787c7e; color:white; padding:5px; }
+  </style>
+</head>
+<body>
+  <nav>
+    {% if user.is_authenticated %}
+      Hello {{ user.username }} | 
+      <a href="{% url 'home' %}">Home</a> | 
+      <a href="{% url 'start_game' %}">Start Game</a> | 
+      <a href="{% url 'logout' %}">Logout</a>
+      {% if user.is_staff %} | <a href="{% url 'admin_daily_report' %}">Reports</a>{% endif %}
+    {% else %}
+      <a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a>
+    {% endif %}
+  </nav>
+  <hr>
+  {% if messages %}
+    {% for m in messages %}<p>{{ m }}</p>{% endfor %}
+  {% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>
